@@ -1,0 +1,201 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0-alpha0
+  title: Search Service
+  description: EOSC Search Service
+  license:
+    name: MIT
+    url: https://spdx.org/licenses/MIT
+servers:
+  - url: https://xxx.eosc-portal.eu/v1
+paths:
+  /search:
+    get:
+      operationId: search_get
+      summary: Returns results
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: collection
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: Sorting of the results
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          examples:
+            sort-example:
+              value: [ "name, desc", "another,asc" ]
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: rows
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden"
+  /recommend:
+    post:
+      operationId: recommend_post
+      summary: Returns results
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: collection
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                context:
+                  $ref: '#/components/schemas/RecommendContext'
+              required:
+                - context
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendResults"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden"
+components:
+  schemas:
+    SearchResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+        nextCursor:
+          type: string
+      required:
+        - results
+    SearchResult:
+      type: object
+      properties:
+        collection:
+          type: string
+        id:
+          type: string
+        attributes:
+          type: object
+      required:
+        - collection
+        - id
+    RecommendResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+      required:
+        - results
+    RecommendContext:
+      type: object
+      required: [ user_uid ]
+      properties:
+        user_uid:
+          type: string
+          format: uid
+          description: User uid
+          example: 1234567890abcdef@egi.eu
+        visit_id:
+          type: string
+          description: Unique visit identification
+          example: e679feac-1f3f-4ac2-a470-89e110bcc30f
+        page_id:
+          type: string
+          description: URL of the visited page
+          example: https://marketplace.eosc-portal.eu/services
+        panel_id:
+          type: string
+          description: Page panel identification
+          example: panel_a
+    BadRequest:
+      type: object
+      properties:
+        message:
+          type: string
+    Unauthorized:
+      type: object
+      properties:
+        message:
+          type: string
+    Forbidden:
+      type: object
+      properties:
+        message:
+          type: string
+  securitySchemes:
+    main_security_scheme:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - main_security_scheme: []
